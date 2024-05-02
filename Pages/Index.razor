@@ -1,0 +1,80 @@
+@page "/"
+@using BlazingPizza.Model
+@using BlazingPizza.Services
+@inject EstadoOrden EstadoOrden
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<div class="main">
+  <h1 class="text-center">Blazing Pizzas</h1>
+  <hr />
+  <div class="contenedor-pizzas">
+    <ul class="pizza-cards">
+      @if (specials != null)
+      {
+        @foreach (var special in specials)
+        {
+          <li @onclick="@(() => EstadoOrden.ShowConfigurePizzaDialog(@special))">
+            <img src="@special.ImageUrl">
+            <div class="pizza-info">
+              <span class="title">@special.Name</span>
+              @special.Description
+              <span class="price">&pound;@special.GetFormattedBasePrice()</span>
+            </div>
+          </li>
+        }
+      }
+    </ul>
+  </div>
+</div>
+
+@if (EstadoOrden.ShowingConfigureDialog)
+{
+  <DialogoConfigurarPizza Pizza="EstadoOrden.ConfiguringPizza"
+    OnCancel="EstadoOrden.CancelConfigurePizzaDialog"
+    OnConfirm="EstadoOrden.ConfirmConfigurePizzaDialog" />
+}
+
+<div class="sidebar">
+  @if (order.Pizzas.Any())
+  {
+    <div class="order-contents">
+      <h2>Your order</h2>
+      @foreach (var configuredPizza in order.Pizzas)
+      {
+        <div class="cart-item">
+          <div class="title">@(configuredPizza.Size)"
+            @configuredPizza.Special.Name
+          </div>
+          <div class="item-price">
+            @configuredPizza.GetFormattedTotalPrice()
+          </div>
+          <a @onclick="@(() => EstadoOrden.RemoveConfiguredPizza(configuredPizza))"
+            class="delete-item">x</a>
+        </div>
+      }
+    </div>
+  }
+  else
+  {
+    <div class="empty-cart">Choose a pizza<br>to get started</div>
+  }
+
+  <div class='order-total @(order.Pizzas.Any() ? "" : "hidden")'>
+    Total:
+    <span class="total-price">@order.GetFormattedTotalPrice()</span>
+    <a href="checkout" class='@(EstadoOrden.Order.Pizzas.Count == 0 ? "btn btn-warning disabled" : "btn btn-warning")'>
+      Order >
+    </a>
+  </div>
+</div>
+
+@code {
+  List<PizzaSpecial> specials = new();
+  Order order => EstadoOrden.Order;
+
+  protected override async Task OnInitializedAsync()
+  {
+    specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
+  }
+}
