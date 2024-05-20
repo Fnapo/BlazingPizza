@@ -1,0 +1,69 @@
+@page "/checkout"
+@using BlazingPizza.Model
+@using BlazingPizza.Services
+@inject EstadoOrden OrderState
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<div class="main flex-centrado-vertical">
+    <div class="w-100">
+        <EditForm Model=Order.DeliveryAddress OnValidSubmit=PlaceOrder OnInvalidSubmit=ShowError>
+            <div class="checkout-cols">
+                <div class="checkout-order-details">
+                    <h4>Review order</h4>
+                    <RevisarPedido Order="Order" />
+                </div>
+
+                <div class="checkout-delivery-address">
+                    <h4>Deliver to...</h4>
+                    <!--
+                    @if (isError) {
+                        <div class="alert alert-danger">Please enter a name and address.</div>
+                    }-->
+                    <AddressEditor Address="Order.DeliveryAddress" />
+                </div>
+            </div>
+            <button class="checkout-button btn btn-warning" disabled=@isSubmitting>
+                Place order
+            </button>
+            <DataAnnotationsValidator />
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    Order Order => OrderState.Order;
+    bool isSubmitting=false;
+//, isError = false;
+
+/*
+    private async Task CheckSubmission(EditContext editContext)
+    {
+        var model = editContext.Model as Address;
+
+        isSubmitting = true;
+        isError = string.IsNullOrWhiteSpace(model?.Name)
+            || string.IsNullOrWhiteSpace(model?.Line1)
+            || string.IsNullOrWhiteSpace(model?.PostalCode);
+        if (!isError)
+        {
+            await PlaceOrder();
+        }
+        isSubmitting = false;
+    }
+*/
+    async Task PlaceOrder()
+    {
+        var response = await HttpClient.PostAsJsonAsync($"{NavigationManager.BaseUri}orders", OrderState.Order);
+        var newOrderId = await response.Content.ReadFromJsonAsync<int>();
+
+        isSubmitting = true;
+        OrderState.ResetOrder();
+        NavigationManager.NavigateTo($"mispedidos/{newOrderId}");
+    }
+
+    protected void ShowError()
+    {
+        //isError = true;
+    }
+}

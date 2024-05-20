@@ -40,4 +40,9 @@ public class EstadoOrden
     {
         Order.Pizzas.Remove(pizza);
     }
+
+    public void ResetOrder()
+    {
+        Order=new Order();
+    }
 }

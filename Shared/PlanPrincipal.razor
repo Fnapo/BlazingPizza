@@ -1,0 +1,15 @@
+@inherits LayoutComponentBase
+
+<div id="app">
+
+	<MenuBarra />
+
+	<div class="content h-85vh">
+		@Body
+	</div>
+
+	<footer class="flex-centrado contenedor-footer">
+		&copy; Blazing Pizza @DateTime.UtcNow.Year
+	</footer>
+
+</div>
