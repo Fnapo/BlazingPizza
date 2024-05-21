@@ -4,6 +4,7 @@
 @inject EstadoOrden EstadoOrden
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JavaScript
 
 <div class="main">
 <!--
@@ -13,10 +14,10 @@
 		<div class="borde-contenedor">
 		</div>
 		<ul class="pizza-cards">
-			@if (specials != null)
+		@if (specials != null)
+		{
+			@foreach (var special in specials)
 			{
-				@foreach (var special in specials)
-				{
 				<li @onclick="@(() => EstadoOrden.ShowConfigurePizzaDialog(@special))">
 					<img src="@special.ImageUrl">
 					<div class="pizza-info">
@@ -24,42 +25,45 @@
 						@special.Description
 						<span class="price">&pound;@special.GetFormattedBasePrice()</span>
 					</div>
-				</li>
-				}
+				</li>		
 			}
+		}
 		</ul>
 	</div>
 </div>
 
 @if (EstadoOrden.ShowingConfigureDialog)
 {
-<DialogoConfigurarPizza Pizza="EstadoOrden.ConfiguringPizza" OnCancel="EstadoOrden.CancelConfigurePizzaDialog"
-	OnConfirm="EstadoOrden.ConfirmConfigurePizzaDialog" />
+	<DialogoConfigurarPizza Pizza="EstadoOrden.ConfiguringPizza" OnCancel="EstadoOrden.CancelConfigurePizzaDialog"
+		OnConfirm="EstadoOrden.ConfirmConfigurePizzaDialog" />
 }
 
 <div class="sidebar">
-	@if (Order.Pizzas.Any())
-	{
+@if (Order.Pizzas.Any())
+{
 	<div class="order-contents">
 		<h2>Your order</h2>
 		@foreach (var configuredPizza in Order.Pizzas)
 		{
-		<div class="cart-item">
-			<div class="title">@(configuredPizza.Size)"
-				@configuredPizza.Special.Name
+			<div class="cart-item">
+				<div class="title">@(configuredPizza.Size)"
+					@configuredPizza.Special.Name
+					<button type="button" class="close text-danger" aria-label="Close"
+						@onclick="@(async () => await RemovePizzaConfirmation(configuredPizza))">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="item-price">
+					@configuredPizza.GetFormattedTotalPrice()
+				</div>
 			</div>
-			<div class="item-price">
-				@configuredPizza.GetFormattedTotalPrice()
-			</div>
-			<a @onclick="@(() => EstadoOrden.RemoveConfiguredPizza(configuredPizza))" class="delete-item">x</a>
-		</div>
 		}
 	</div>
-	}
-	else
-	{
+}
+else
+{
 	<div class="empty-cart">Choose a pizza<br>to get started</div>
-	}
+}
 
 	<div class='order-total @(Order.Pizzas.Any() ? "" : "hidden")'>
 		Total:
@@ -78,5 +82,34 @@
 	protected override async Task OnInitializedAsync()
 	{
 		specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
+	}
+
+	async Task RemovePizzaConfirmation(Pizza removePizza)
+	{
+		/*
+		if (await JavaScript.InvokeAsync<bool>(
+			"confirm",
+			$"""¿Quieres eliminar "{removePizza.Special!.Name}" de su pedido?"""))
+		{
+			EstadoOrden.RemoveConfiguredPizza(removePizza);
+		}
+		*/
+		var messageParams = new
+		{
+			title = "Remove Pizza?",
+			text = $"""¿Quieres eliminar "{removePizza.Special!.Name}" de su pedido?""",
+			icon = "warning",
+			buttons = new
+			{
+				abort = new { text = "No, déjala en mi pedido", value = false },
+				confirm = new { text = "Sí, quítala", value = true }
+			},
+			dangerMode = true
+		};
+
+		if (await JavaScript.InvokeAsync<bool>("swal", messageParams))
+		{
+			EstadoOrden.RemoveConfiguredPizza(removePizza);
+		}
 	}
 }

@@ -11,7 +11,7 @@ builder.Services.AddScoped<EstadoOrden>();
 // Register the pizzas service
 builder.Services.AddSingleton<PizzaService>();
 builder.Services.AddHttpClient();
-builder.Services.AddSqlServer<PizzaStoreContext>(@"Server=PACO2015\SQLEXPRESS;Database=Pizza;Trusted_Connection=True;TrustServerCertificate=true;");
+builder.Services.AddSqlServer<PizzaStoreContext>(builder.Configuration.GetConnectionString("PizzaBlazor"));
 
 var app = builder.Build();
 
