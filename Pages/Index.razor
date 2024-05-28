@@ -86,6 +86,7 @@ else
 
 	async Task RemovePizzaConfirmation(Pizza removePizza)
 	{
+		string pregunta=$"¿Quieres eliminar \"{removePizza.Special!.Name}\" de su pedido?";
 		/*
 		if (await JavaScript.InvokeAsync<bool>(
 			"confirm",
@@ -97,7 +98,8 @@ else
 		var messageParams = new
 		{
 			title = "Remove Pizza?",
-			text = $"""¿Quieres eliminar "{removePizza.Special!.Name}" de su pedido?""",
+			text = pregunta,
+			//$"""¿Quieres eliminar "{removePizza.Special!.Name}" de su pedido?""",
 			icon = "warning",
 			buttons = new
 			{

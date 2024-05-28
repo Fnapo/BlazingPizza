@@ -23,11 +23,14 @@ namespace BlazingPizza.Model
         public int Size { get; set; }
 
         public List<PizzaTopping> Toppings { get; set; }
-
+/*
         public decimal GetBasePrice()
         {
-            return ((decimal)Size / (decimal)DefaultSize) * Special.BasePrice;
-        }
+            return ((decimal)Size / DefaultSize) * Special.BasePrice;
+        }*/
+        public decimal GetBasePrice() =>
+            Special.FixedSize is not null ? Special.BasePrice : 
+            ((decimal)Size / DefaultSize) * Special.BasePrice;
 
         public decimal GetTotalPrice()
         {
